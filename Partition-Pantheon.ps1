@@ -96,6 +96,8 @@ do{
 
 $Partition_1_File_Type = Read-Host "What file type would you like to move?"
 
+Write-Host "You decided to move $Partition_1_File_Type to the first partition." -ForegroundColor "Green"
+
 }
 
 until($Partition_1_File_Type -match "^\.[^.]+$")
@@ -142,7 +144,9 @@ Write-Host "'$Partition_2_Space MB' has been set as the size for Partition 2." -
 
 do{
 
-$Partition_2_File_Type = Read-Host "What file type would you like to move to the second partition (besides 'C')"
+$Partition_2_File_Type = Read-Host "What file type would you like to move to the second partition"
+
+Write-Host "You decided to move $Partition_2_File_Type to the second partition." -ForegroundColor "Green"
 
 }
 
@@ -154,9 +158,21 @@ $Partition_1_Destination = "$Partition_1_Letter" + ":\"
 
 $Partition_2_Destination = "$Partition_2_Letter" + ":\"
 
-Copy-Item -Path $Desktop -Filter $Partition_1_File_Type -Destination $Partition_1_Destination -Recurse
+if($Partition_1_File_Type -eq "*.py"){
 
-Copy-Item -Path $Desktop -Filter $Partition_2_File_Type -Destination $Partition_2_Destination -Recurse
+$Partition_1_File_Path = $Desktop + '\Python'
+
+}
+
+if($Partition_2_File_Type -eq "*.ps1"){
+
+$Partition_2_File_Path = $Desktop + '\PowerShell'
+
+}
+
+Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination -Recurse
+
+Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination -Recurse
 
 #$driveEject = New-Object -comObject Shell.Application
 #$driveEject.Namespace(17).ParseName($Partition_1_Destination).InvokeVerb("Eject")
