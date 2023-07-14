@@ -3,13 +3,81 @@
 # 1 mb (megabyte) = 1000 kb (kilobyte)
 # 1 gb (gigabyte) = 1000 mb (megabyte)
 
+
+function RegBackup{
+
+do{
+
+$Registry_Backup_Partition_Name = Read-Host "What would you like to name the registry partition?"
+
+}
+
+until($Registry_Backup_Partition_Name.Length -gt 1 -and -not $Registry_Backup_Partition_Name.StartsWith("\d"))
+
+New-Partition -DiskNumber 1 -UseMaximumSize | Format-Volume -Filesystem NTFS -NewFileSystemLabel $Registry_Backup_Partition_Name
+
+Write-Host "'$Registry_Backup_Partition_Name' has been set as the name for the registry partition." -ForeGroundColor "Green"
+
+# Allocate 2nd partition letter
+
+do{
+
+$Registry_Drive_Letter = Read-Host "What drive letter would you like to give the registry partition (besides 'C')"
+
+}
+
+until($Registry_Drive_Letter.Length -eq 1 -and $Registry_Drive_Letter -notmatch "\d" -and -not $Registry_Drive_Letter.StartsWith("C"))
+
+Write-Host "'$Registry_Drive_Letter' has been set as the drive letter for the registry partition." -ForeGroundColor "Green"
+
+Get-Partition -DiskNumber 1 -PartitionNumber 3 | Set-Partition -NewDriveLetter $Registry_Drive_Letter
+
+$Registry_Drive_Destination = "$Registry_Drive_Letter" + ":\"
+
+$Registry_Partition_Space = Read-Host "How much space (in MB) do you want to allocate to the registry partition?"
+
+$Registry_Partition_Space = $Registry_Partition_Space
+
+$Registry_Partition_Space = (($Registry_Partition_Space / 1) * 1MB)
+
+Resize-Partition -DiskNumber 1 -PartitionNumber 3 -Size ($Registry_Partition_Space)
+
+Write-Host "'$Registry_Partition_Space MB' has been set as the size for Partition 3." -ForeGroundColor "Green"
+
+$Hive_Backup_Count = $Number_Of_Hives_To_Backup
+
+$Hives = @()
+
+1..$Number_Of_Hives_To_Backup | ForEach-Object {
+
+Write-Host "Windows Registry Hives are: HKLM, HKCR, HKCU" -ForegroundColor "Yellow"
+
+do{
+
+$Selected_Hive = Read-Host "Write a name of one of the $Hive_Backup_Count hives you wish to backup."
+
+}
+
+until($Selected_Hive -eq "HKLM" -or $Selected_Hive -eq "HKCR" -or $Selected_Hive -eq "HKCU")
+
+reg export $Selected_Hive "$Registry_Drive_Destination\$Selected_Hive.reg" 
+
+}
+
+$Hives
+
+Write-Host "You successfully backed up $Number_Of_Hives_To_Backup to $Registry_Drive_Letter" -ForegroundColor "Green"
+
+}
+
 $Desktop = [Environment]::GetFolderPath("Desktop")
 
 $Drives = [System.IO.DriveInfo]::GetDrives() # Gets removable drives
 $Removable_Drives = $Drives | Where-Object { $_.DriveType -eq 'Removable' -and $_.IsReady } # Selects removable and ready drives
 if($Removable_Drives){
     Write-Host "Current removable drives are: $Removable_Drives" -ForegroundColor "Green" # Displays available removable drives
-    $Continue_Prompt = Read-Host "Would you like to continue with the script? Press 1 for reformatting, 2 for no, and 3 to see what files are on the removable drive(s). Press 4 if you want to completely wipe the removable drives."
+    $Continue_Prompt = Read-Host "Would you like to continue with the script? Press 1 for reformatting, 2 for no, and 3 to see what files are on the removable drive(s). Press 4 if you want to completely wipe the removable drives.
+    Press 5 if you want to add a new partition to back up the registry."
     if($Continue_Prompt -eq "1"){ 
     Write-Host "WARNING!! - FOLLOWING THROUGH WITH THE PROMPTS WILL OVERRIDE YOUR CURRENT SETTINGS AND FILES IN YOUR REMOVABLE DRIVE!" -ForeGroundColor "Red"
     Partition_Pantheon # Runs main function
@@ -17,6 +85,9 @@ if($Removable_Drives){
     if($Continue_Prompt -eq "2"){
     Write-Host "Exiting Partition Pantheon.." -ForeGroundColor Gray
     return
+    }
+    if($Continue_Prompt -eq "5"){
+    Invoke-Expression RegBackup
     }
     if($Continue_Prompt -eq "3"){
     Write-Host "$Removable_Drives" -ForegroundColor Cyan
@@ -35,11 +106,11 @@ if($Removable_Drives){
     else{
     return
     }
-    }
 }
 else{
  Write-Host "No removable drives found." -ForegroundColor "Red"
  }
+}
 #>
 
 diskmgmt.msc
@@ -180,6 +251,26 @@ Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destinati
 Write-Host "Success! You have successfully created $Partition_1_Name with the letter $Partition_1_Destination and size of $Partition_1_Space in MB and $Partition_2_Name with the letter $Partition_2_Destination and size of
 $Partition_2_Space in MB" -ForegroundColor "Green"
 
+do{
+
+$Registry_Backup = Read-Host "`n`n`nWould you like to back up the registry as well? You may also backup specific hives if you wish. Press 1 for yes and 2 for no."
+
 }
 
+until($Registry_Backup -eq "1" -or $Registry_Backup -eq "2")
+
+if($Registry_Backup -eq "1"){
+
+RegBackup 
+
+}
+
+if($Registry_Backup -eq "2"){
+
+Write-Host "All set! Thank you for using Partition Pantheon." -ForeGroundColor Cyan
+}
+
+}
+
+###
 Partition_Pantheon
