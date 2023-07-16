@@ -245,6 +245,8 @@ Write-Host $Partition_1_Destination
 
 Get-Partition -DiskNumber 1 | Set-Partition -NewDriveLetter $Partition_1_Letter
 
+$Partition_1_Destination = "$Partition_1_Letter" + ":\"
+
 # Add do until
 
 do{
@@ -301,6 +303,8 @@ Write-Host "Please note that you cannot proceed unless the specified path exists
 
 until(Test-Path -Path $Partition_1_File_Path)
 
+Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination
+
 Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path to $Partition_1_Name ($Partition_1_Letter)" -ForeGroundColor "Yellow"
 
 $Partition_1_File_Path = $Partition_1_File_Path
@@ -311,6 +315,8 @@ $Partition_1_File_Path = $Partition_1_File_Path
 
 if($Partition_1_File_Path_Request -eq "2"){
 
+Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination
+
 $Partition_1_File_Path = $Desktop
 
 Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path to $Partition_1_Name ($Partition_1_Letter)" -ForeGroundColor "Yellow"
@@ -320,6 +326,8 @@ Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path t
 # If user decides to select the documents directory:
 
 if($Partition_1_File_Path_Request -eq "3"){
+
+Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination
 
 $Partition_1_File_Path = [Environment]::GetFolderPath('Personal')
 
@@ -350,6 +358,8 @@ Write-Host "Please note that you cannot proceed unless the specified path exists
 }
 
 until(Test-Path -Path $Partition_1_File_Path)
+
+Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination -Recurse
 
 Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path to $Partition_1_Name ($Partition_1_Letter)" -ForeGroundColor "Yellow"
 
@@ -405,9 +415,91 @@ until($Partition_2_File_Type -match "^\.[^.]+$")
 
 $Partition_2_File_Type = "*" + "$Partition_2_File_Type"
 
-$Partition_1_Destination = "$Partition_1_Letter" + ":\"
-
 $Partition_2_Destination = "$Partition_2_Letter" + ":\"
+
+do{
+
+$Partition_2_File_Path_Request = Read-Host "Where would you like to move your $Partition_2_File_Type from? `nPress 1 to type the full path to the location of your files, `n2 to select the desktop `n3 to select the documents directory `n4 to display the subdirectories on the desktop and choose one" 
+
+}
+
+until($Partition_2_File_Path_Request -eq "1" -or $Partition_2_File_Path_Request -eq "2" -or $Partition_2_File_Path_Request -eq "3" -or $Partition_2_File_Path_Request -eq "4")
+
+# If user decides to type full path:
+
+if($Partition_2_File_Path_Request -eq "1"){
+
+do{
+    
+$Partition_2_File_Path = Read-Host "Please type the full path to the location of your files."
+
+Write-Host "Please note that you cannot proceed unless the specified path exists on this machine." -ForeGroundColor "Yellow"
+
+}
+
+until(Test-Path -Path $Partition_2_File_Path)
+
+Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination
+
+Write-Host "You will move all $Partition_2_File_Type in $Partition_2_File_Path to $Partition_2_Name ($Partition_2_Letter)" -ForeGroundColor "Yellow"
+
+$Partition_2_File_Path = $Partition_2_File_Path
+
+}
+
+# If user decides to select the desktop:
+
+if($Partition_2_File_Path_Request -eq "2"){
+
+Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination
+
+$Partition_2_File_Path = $Desktop
+
+Write-Host "You will move all $Partition_2_File_Type in $Partition_2_File_Path to $Partition_2_Name ($Partition_2_Letter)" -ForeGroundColor "Yellow"
+
+}
+
+# If user decides to select the documents directory:
+
+if($Partition_2_File_Path_Request -eq "3"){
+
+Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination
+
+$Partition_2_File_Path = [Environment]::GetFolderPath('Personal')
+
+Write-Host "You will move all $Partition_2_File_Type in $Partition_2_File_Path to $Partition_2_Name ($Partition_2_Letter)" -ForeGroundColor "Yellow"
+
+}
+
+# If user decides to display all directories on desktop and choose one:
+
+if($Partition_2_File_Path_Request -eq "4"){
+
+Write-Host "Type the name of the desktop subdirectory displayed below" -ForegroundColor "Yellow"
+
+$Desktop = [Environment]::GetFolderPath("Desktop")
+
+$All_Desktop_Subdirectories = Get-ChildItem -Path $Desktop -Directory | Out-Host
+
+Write-Host $All_Desktop_Subdirectories -ForeGroundColor "Yellow"
+
+do{
+    
+$Partition_2_File_Path = Read-Host "Please type the name of the directory from the list above."
+
+$Partiton_1_File_Path = $Desktop + "\" + $Partition_2_File_Path
+
+Write-Host "Please note that you cannot proceed unless the specified path exists on this machine." -ForeGroundColor "Yellow"
+
+}
+
+until(Test-Path -Path $Partition_2_File_Path)
+
+Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination -Recurse
+
+Write-Host "You will move all $Partition_2_File_Type in $Partition_2_File_Path to $Partition_2_Name ($Partition_2_Letter)" -ForeGroundColor "Yellow"
+
+}
 
 <#
 if($Partition_1_File_Type -eq "*.py"){
@@ -422,8 +514,6 @@ $Partition_2_File_Path = $Desktop + '\PowerShell'
 
 }
 #>
-
-Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination
 
 Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination
 
