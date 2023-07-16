@@ -86,17 +86,39 @@ $Drives = [System.IO.DriveInfo]::GetDrives() # Gets removable drives
 $Removable_Drives = $Drives | Where-Object { $_.DriveType -eq 'Removable' -and $_.IsReady }
 [string]$Removable_Drives = $Drives | Where-Object { $_.DriveType -eq 'Removable' -and $_.IsReady } # Selects removable and ready drives
 
-$Removable_Drives_Count =  $Drives | Where-Object { $_.DriveType -eq 'Removable' -and $_.IsReady } | Measure-Object | Select -expand count
-
 $Removable_Drives_For_Checking = $Removable_Drives.replace(":\", "") ## Get this though
 
 $Removable_Drives_For_Checking = $Removable_Drives_For_Checking.replace(" ", ",")
 
 $Index_Position = $Removable_Drives_For_Checking.IndexOf(",")
 
+if($Removable_Drive_Letter_1 -eq $null){
+
+Write-Host "Null 1"
+
+}
+
+else{
+
 $Removable_Drive_Letter_1 = $Removable_Drives_For_Checking.Substring(0, $Index_Position)
 
+}
+
+if($Removable_Drive_Letter_2 -eq $null){
+
+Write-Host "Null 2"
+
+}
+
+else{
+
 $Removable_Drive_Letter_2 = $Removable_Drives_For_Checking.Substring($Index_Position + 1)
+
+}
+
+$Removable_Drives_Count =  $Drives | Where-Object { $_.DriveType -eq 'Removable' -and $_.IsReady } | Measure-Object | Select -expand count
+
+
 
 $global:Removable_Drive_Letter_1 = $Removable_Drive_Letter_1
 
@@ -202,6 +224,8 @@ Get-Partition -DiskNumber 1 | Set-Partition -NewDriveLetter $Partition_1_Letter
 
 $Partition_1_Space = Read-Host "How much space (in MB) do you want to allocate to Partition 1?"
 
+# Add do until
+
 $Partition_1_Space = $Partition_1_Space
 
 $Partition_1_Space = (($Partition_1_Space / 1) * 1MB)
@@ -228,20 +252,28 @@ $Partition_1_File_Type = "*" + "$Partition_1_File_Type"
 
 do{
 
-$Partition_1_Path = Read-Host "Where would you like to move your $Partition_1_File_Type from? Press 1 to type the full path to the location of your files, 
+$Partition_1_File_Path_Request = Read-Host "Where would you like to move your $Partition_1_File_Type from? Press 1 to type the full path to the location of your files, 
 `n2 to select the desktop `n3 to select My Documents `n4 to display the subdirectories on the desktop and choose one" 
 
 }
 
-until($Partition_1_File_Type -eq "1" -or $Partition_1_File_Type -eq "2" -or $Partition_1_File_Type -eq "3" -or $Partition_1_File_Type -eq "4")
+until($Partition_1_File_Path_Request -eq "1" -or $Partition_1_File_Path_Request -eq "2" -or $Partition_1_File_Path_Request -eq "3" -or $Partition_1_File_Path_Request -eq "4")
 
-if($Partition_1_File_Type -eq "1"){
+if($Partition_1_File_Path_Request -eq "1"){
 
+do{
+    
+$Partition_1_File_Path = Read-Host "Please type the full path to the location of your files."
+
+Write-Host "Please note that you cannot proceed unless the specified path exists on this machine." -ForeGroundColor "Yellow"
 
 }
 
+until(Test-Path -Path $Partition_1_File_Path)
 
-$Get-ChildItem -Path $Desktop -Directory | Select-Object name
+}
+
+#$Get-ChildItem -Path $Desktop -Directory | Select-Object name
 
 # Name 2nd partition
 
@@ -299,7 +331,7 @@ $Partition_2_Destination = "$Partition_2_Letter" + ":\"
 
 if($Partition_1_File_Type -eq "*.py"){
 
-$Partition_1_File_Path = $Desktop + '\Python'
+#$Partition_1_File_Path = $Desktop + '\Python'
 
 }
 
