@@ -23,9 +23,38 @@ if($Removable_Drives_Count -eq 3){
 
 Write-Host "There is already a registry partition on Disk 1." -ForeGroundColor "Yellow"
 
-$Registry_Partition_Choice = Read-Host "What would you like to do? `nPress 1 to see what is on it. `n2 to add another registry file. `n3 to delete the registry partition."
+$Registry_Partition_Choice = Read-Host "What would you like to do? `nPress 1 to see what is on it. `n2 to add another registry file. `n3 to delete a partition."
 
-#Continue here
+if($Registry_Partition_Choice -eq "1"){
+
+Get-ChildItem -Path $Removable_Drives
+gwmi win32_logicaldisk | ?{$_.DeviceId -notlike "C:"} | Format-Table DeviceId, MediaType, @{n="Size";e={[math]::Round($_.Size/1GB,2)}},@{n="FreeSpace";e={[math]::Round($_.FreeSpace/1GB,2)}}
+
+return 
+
+}
+
+if($Registry_Partition_Choice -eq "2"){
+
+
+return 
+
+}
+
+
+if($Registry_Partition_Choice -eq "3"){
+
+do{
+
+$Removable_Drive_To_Delete = Read-Host "`nPlease type the drive letter"
+
+}
+
+until($Removable_Drives -match $Removable_Drive_To_Delete)
+
+Remove-Partition -DriveLetter $Removable_Drive_To_Delete
+
+return 
 
 }
 
@@ -145,7 +174,6 @@ $Removable_Drive_Letter_2 = $Removable_Drives_For_Checking.Substring($Index_Posi
 }
 
 $Removable_Drives_Count =  $Drives | Where-Object { $_.DriveType -eq 'Removable' -and $_.IsReady } | Measure-Object | Select -expand count
-
 
 $global:Removable_Drive_Letter_1 = $Removable_Drive_Letter_1
 
@@ -303,7 +331,7 @@ Write-Host "Please note that you cannot proceed unless the specified path exists
 
 until(Test-Path -Path $Partition_1_File_Path)
 
-Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination
+Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination -Recurse
 
 Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path to $Partition_1_Name ($Partition_1_Letter)" -ForeGroundColor "Yellow"
 
@@ -315,9 +343,9 @@ $Partition_1_File_Path = $Partition_1_File_Path
 
 if($Partition_1_File_Path_Request -eq "2"){
 
-Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination
-
 $Partition_1_File_Path = $Desktop
+
+Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination -Recurse
 
 Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path to $Partition_1_Name ($Partition_1_Letter)" -ForeGroundColor "Yellow"
 
@@ -327,9 +355,9 @@ Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path t
 
 if($Partition_1_File_Path_Request -eq "3"){
 
-Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination
-
 $Partition_1_File_Path = [Environment]::GetFolderPath('Personal')
+
+Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination -Recurse
 
 Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path to $Partition_1_Name ($Partition_1_Letter)" -ForeGroundColor "Yellow"
 
@@ -439,7 +467,7 @@ Write-Host "Please note that you cannot proceed unless the specified path exists
 
 until(Test-Path -Path $Partition_2_File_Path)
 
-Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination
+Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination -Recurse
 
 Write-Host "You will move all $Partition_2_File_Type in $Partition_2_File_Path to $Partition_2_Name ($Partition_2_Letter)" -ForeGroundColor "Yellow"
 
@@ -451,9 +479,9 @@ $Partition_2_File_Path = $Partition_2_File_Path
 
 if($Partition_2_File_Path_Request -eq "2"){
 
-Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination
-
 $Partition_2_File_Path = $Desktop
+
+Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination -Recurse
 
 Write-Host "You will move all $Partition_2_File_Type in $Partition_2_File_Path to $Partition_2_Name ($Partition_2_Letter)" -ForeGroundColor "Yellow"
 
@@ -463,9 +491,9 @@ Write-Host "You will move all $Partition_2_File_Type in $Partition_2_File_Path t
 
 if($Partition_2_File_Path_Request -eq "3"){
 
-Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination
-
 $Partition_2_File_Path = [Environment]::GetFolderPath('Personal')
+
+Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination -Recurse
 
 Write-Host "You will move all $Partition_2_File_Type in $Partition_2_File_Path to $Partition_2_Name ($Partition_2_Letter)" -ForeGroundColor "Yellow"
 
@@ -501,31 +529,12 @@ Write-Host "You will move all $Partition_2_File_Type in $Partition_2_File_Path t
 
 }
 
-<#
-if($Partition_1_File_Type -eq "*.py"){
-
-#$Partition_1_File_Path = $Desktop + '\Python'
-
-}
-
-if($Partition_2_File_Type -eq "*.ps1"){
-
-$Partition_2_File_Path = $Desktop + '\PowerShell'
-
-}
-#>
-
-Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination
-
-#$driveEject = New-Object -comObject Shell.Application
-#$driveEject.Namespace(17).ParseName($Partition_1_Destination).InvokeVerb("Eject")
-
 Write-Host "Success! You have successfully created $Partition_1_Name with the letter $Partition_1_Destination and size of $Partition_1_Space in MB and $Partition_2_Name with the letter $Partition_2_Destination and size of
 $Partition_2_Space in MB" -ForegroundColor "Green"
 
 do{
 
-$Registry_Backup = Read-Host "`n`n`nWould you like to back up the registry as well? You may also backup specific hives if you wish. Press 1 for yes and 2 for no."
+$Registry_Backup = Read-Host "`nWould you like to back up the registry as well? You may also backup specific hives if you wish. Press 1 for yes and 2 for no."
 
 }
 
@@ -540,6 +549,9 @@ RegBackup
 if($Registry_Backup -eq "2"){
 
 Write-Host "All set! Thank you for using Partition Pantheon." -ForeGroundColor Cyan
+
+##$driveEject = New-Object -comObject Shell.Application
+#$driveEject.Namespace(17).ParseName($Partition_1_Destination).InvokeVerb("Eject")
 }
 
 }
