@@ -245,9 +245,15 @@ Write-Host $Partition_1_Destination
 
 Get-Partition -DiskNumber 1 | Set-Partition -NewDriveLetter $Partition_1_Letter
 
+# Add do until
+
+do{
+    
 $Partition_1_Space = Read-Host "How much space (in MB) do you want to allocate to Partition 1?"
 
-# Add do until
+}
+
+until ($Partition_1_Space -match "\d")
 
 $Partition_1_Space = $Partition_1_Space
 
@@ -275,8 +281,7 @@ $Partition_1_File_Type = "*" + "$Partition_1_File_Type"
 
 do{
 
-$Partition_1_File_Path_Request = Read-Host "Where would you like to move your $Partition_1_File_Type from? Press 1 to type the full path to the location of your files, 
-`n2 to select the desktop `n3 to select the documents directory `n4 to display the subdirectories on the desktop and choose one" 
+$Partition_1_File_Path_Request = Read-Host "Where would you like to move your $Partition_1_File_Type from? `nPress 1 to type the full path to the location of your files, `n2 to select the desktop `n3 to select the documents directory `n4 to display the subdirectories on the desktop and choose one" 
 
 }
 
@@ -326,13 +331,29 @@ Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path t
 
 if($Partition_1_File_Path_Request -eq "4"){
 
-$Partition_1_File_Path = [Environment]::GetFolderPath('Personal')
+Write-Host "Type the name of the desktop subdirectory displayed below" -ForegroundColor "Yellow"
+
+$Desktop = [Environment]::GetFolderPath("Desktop")
+
+$All_Desktop_Subdirectories = Get-ChildItem -Path $Desktop -Directory | Out-Host
+
+Write-Host $All_Desktop_Subdirectories -ForeGroundColor "Yellow"
+
+do{
+    
+$Partition_1_File_Path = Read-Host "Please type the name of the directory from the list above."
+
+$Partiton_1_File_Path = $Desktop + "\" + $Partition_1_File_Path
+
+Write-Host "Please note that you cannot proceed unless the specified path exists on this machine." -ForeGroundColor "Yellow"
+
+}
+
+until(Test-Path -Path $Partition_1_File_Path)
 
 Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path to $Partition_1_Name ($Partition_1_Letter)" -ForeGroundColor "Yellow"
 
 }
-
-#$Get-ChildItem -Path $Desktop -Directory | Select-Object name
 
 # Name 2nd partition
 
@@ -388,6 +409,7 @@ $Partition_1_Destination = "$Partition_1_Letter" + ":\"
 
 $Partition_2_Destination = "$Partition_2_Letter" + ":\"
 
+<#
 if($Partition_1_File_Type -eq "*.py"){
 
 #$Partition_1_File_Path = $Desktop + '\Python'
@@ -399,10 +421,11 @@ if($Partition_2_File_Type -eq "*.ps1"){
 $Partition_2_File_Path = $Desktop + '\PowerShell'
 
 }
+#>
 
-Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination -Recurse
+Copy-Item -Path $Partition_1_File_Path -Filter $Partition_1_File_Type -Destination $Partition_1_Destination
 
-Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination -Recurse
+Copy-Item -Path $Partition_2_File_Path -Filter $Partition_2_File_Type -Destination $Partition_2_Destination
 
 #$driveEject = New-Object -comObject Shell.Application
 #$driveEject.Namespace(17).ParseName($Partition_1_Destination).InvokeVerb("Eject")
