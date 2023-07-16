@@ -5,11 +5,25 @@
 
 function RegBackup{
 
+$Drives = [System.IO.DriveInfo]::GetDrives() # Gets removable drives
+$Removable_Drives = $Drives | Where-Object { $_.DriveType -eq 'Removable' -and $_.IsReady }
+[string]$Removable_Drives = $Drives | Where-Object { $_.DriveType -eq 'Removable' -and $_.IsReady } # Selects removable and ready drives
+
+$Removable_Drives_For_Checking = $Removable_Drives.replace(":\", "") ## Get this though
+
+$Removable_Drives_For_Checking = $Removable_Drives_For_Checking.replace(" ", ",")
+
+$Index_Position = $Removable_Drives_For_Checking.IndexOf(",")
+
+$Removable_Drive_Letter_1 = $Removable_Drives_For_Checking.Substring(0, $Index_Position)
+
+$Removable_Drive_Letter_2 = $Removable_Drives_For_Checking.Substring($Index_Position + 1)
+
 if($Removable_Drives_Count -eq 3){
 
 Write-Host "There is already a registry partition on Disk 1." -ForeGroundColor "Yellow"
 
-$Registry_Partition_Choice = Read-Host "What would you like to do? `nPress 1 to see what is on it. 2 to add another registry file. `n3 to delete the registry partition."
+$Registry_Partition_Choice = Read-Host "What would you like to do? `nPress 1 to see what is on it. `n2 to add another registry file. `n3 to delete the registry partition."
 
 #Continue here
 
@@ -35,7 +49,7 @@ $Registry_Drive_Letter = Read-Host "What drive letter would you like to give the
 
 }
 
-until($Registry_Drive_Letter.Length -eq 1 -and $Registry_Drive_Letter -notmatch "\d" -and -not $Registry_Drive_Letter.StartsWith("C") -and -not $Registry_Drive_Letter.StartsWith($Removable_Drive_Letter_1) -and -not $Registry_Drive_Letter.StartsWith($Removable_Drive_Letter_2))
+until($Registry_Drive_Letter.Length -eq 1 -and $Registry_Drive_Letter -notmatch "\d" -and -not $Registry_Drive_Letter.StartsWith("C") -and $Registry_Drive_Letter -ne $Removable_Drive_Letter_1 -and $Registry_Drive_Letter -ne $Removable_Drive_Letter_2)
 
 Write-Host "'$Registry_Drive_Letter' has been set as the drive letter for the registry partition." -ForeGroundColor "Green"
 
@@ -76,9 +90,27 @@ $Hives
 
 Write-Host "You successfully backed up $Number_Of_Hives_To_Backup to $Registry_Drive_Letter" -ForegroundColor "Green"
 
-return 
+exit
 
 }
+
+# Check drives and other pertinent information at start of script 
+
+$User_ID = [System.Security.Principal.WindowsIdentity]::GetCurrent()
+
+$Principal_ID = New-Object System.Security.Principal.WindowsPrincipal($User_ID)
+
+    if ($Principal_ID.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)){
+
+      Write-Host "Partition Pantheon is being run with Admin priviledges. You are all set to go." -ForeGroundColor "Green"
+
+    }
+
+    else{
+
+      Write-Host "Please run Partition Pantheon with Admin priviledges in order to make changes to your removable disk." -ForegroundColor "Red" 
+    
+        }
 
 $Desktop = [Environment]::GetFolderPath("Desktop")
 
@@ -94,8 +126,6 @@ $Index_Position = $Removable_Drives_For_Checking.IndexOf(",")
 
 if($Removable_Drive_Letter_1 -eq $null){
 
-Write-Host "Null 1"
-
 }
 
 else{
@@ -105,8 +135,6 @@ $Removable_Drive_Letter_1 = $Removable_Drives_For_Checking.Substring(0, $Index_P
 }
 
 if($Removable_Drive_Letter_2 -eq $null){
-
-Write-Host "Null 2"
 
 }
 
@@ -119,7 +147,6 @@ $Removable_Drive_Letter_2 = $Removable_Drives_For_Checking.Substring($Index_Posi
 $Removable_Drives_Count =  $Drives | Where-Object { $_.DriveType -eq 'Removable' -and $_.IsReady } | Measure-Object | Select -expand count
 
 
-
 $global:Removable_Drive_Letter_1 = $Removable_Drive_Letter_1
 
 $global:Removable_Drive_Letter_2 = $Removable_Drive_Letter_2
@@ -127,26 +154,22 @@ $global:Removable_Drive_Letter_2 = $Removable_Drive_Letter_2
 if($Removable_Drives){
 
     Write-Host "Welcome to Partition Pantheon! Your current removable drives are: '$Removable_Drives'" -ForegroundColor "Green" # Displays available removable drives
-    $Continue_Prompt = Read-Host "`nPress 1 for reformatting your removable disk, `n2 to exit Partition Pantheon, `n3 to see more information about the removable drive(s), `n4 to add a new partition to back up your Windows Registry, `n5 to completely wipe the drives from your removable disk."
-    if($Continue_Prompt -eq "1"){ 
-    Write-Host "WARNING!! - FOLLOWING THROUGH WITH THE PROMPTS WILL OVERRIDE YOUR CURRENT SETTINGS AND FILES IN YOUR REMOVABLE DRIVE!" -ForeGroundColor "Red"
-    Partition_Pantheon # Runs main function
-    }
-    if($Continue_Prompt -eq "2"){
+    $Continue_Prompt = Read-Host "`nPress 1 to exit Partition Pantheon, `n2 to see more information about the removable drive(s), `n3 to add a new partition to back up your Windows Registry, `n4 to completely wipe the drives from your removable disk."
+    if($Continue_Prompt -eq "1"){
     Write-Host "Exited Partition Pantheon." -ForeGroundColor "Yellow"
     return
     }
-    if($Continue_Prompt -eq "3"){
+    if($Continue_Prompt -eq "2"){
     Write-Host "$Removable_Drives" -ForegroundColor Cyan
     Get-ChildItem -Path $Removable_Drives
     gwmi win32_logicaldisk | ?{$_.DeviceId -notlike "C:"} | Format-Table DeviceId, MediaType, @{n="Size";e={[math]::Round($_.Size/1GB,2)}},@{n="FreeSpace";e={[math]::Round($_.FreeSpace/1GB,2)}}
     return
-    Write-Host "Exited Partition Pantheon.." -ForeGroundColor "Yellow"
+    Write-Host "Exited Partition Pantheon." -ForeGroundColor "Yellow"
     }
-    if($Continue_Prompt -eq "4"){
+    if($Continue_Prompt -eq "3"){
     Invoke-Expression RegBackup
     }
-    if($Continue_Prompt -eq "5"){
+    if($Continue_Prompt -eq "4"){
     $Delete_Partition = Read-Host "Type 1 to delete a certain drive or type 2 to completely remove the removable drives on disk 1."
     if($Delete_Partition -eq "1"){
     
@@ -253,11 +276,13 @@ $Partition_1_File_Type = "*" + "$Partition_1_File_Type"
 do{
 
 $Partition_1_File_Path_Request = Read-Host "Where would you like to move your $Partition_1_File_Type from? Press 1 to type the full path to the location of your files, 
-`n2 to select the desktop `n3 to select My Documents `n4 to display the subdirectories on the desktop and choose one" 
+`n2 to select the desktop `n3 to select the documents directory `n4 to display the subdirectories on the desktop and choose one" 
 
 }
 
 until($Partition_1_File_Path_Request -eq "1" -or $Partition_1_File_Path_Request -eq "2" -or $Partition_1_File_Path_Request -eq "3" -or $Partition_1_File_Path_Request -eq "4")
+
+# If user decides to type full path:
 
 if($Partition_1_File_Path_Request -eq "1"){
 
@@ -270,6 +295,40 @@ Write-Host "Please note that you cannot proceed unless the specified path exists
 }
 
 until(Test-Path -Path $Partition_1_File_Path)
+
+Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path to $Partition_1_Name ($Partition_1_Letter)" -ForeGroundColor "Yellow"
+
+$Partition_1_File_Path = $Partition_1_File_Path
+
+}
+
+# If user decides to select the desktop:
+
+if($Partition_1_File_Path_Request -eq "2"){
+
+$Partition_1_File_Path = $Desktop
+
+Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path to $Partition_1_Name ($Partition_1_Letter)" -ForeGroundColor "Yellow"
+
+}
+
+# If user decides to select the documents directory:
+
+if($Partition_1_File_Path_Request -eq "3"){
+
+$Partition_1_File_Path = [Environment]::GetFolderPath('Personal')
+
+Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path to $Partition_1_Name ($Partition_1_Letter)" -ForeGroundColor "Yellow"
+
+}
+
+# If user decides to display all directories on desktop and choose one:
+
+if($Partition_1_File_Path_Request -eq "4"){
+
+$Partition_1_File_Path = [Environment]::GetFolderPath('Personal')
+
+Write-Host "You will move all $Partition_1_File_Type in $Partition_1_File_Path to $Partition_1_Name ($Partition_1_Letter)" -ForeGroundColor "Yellow"
 
 }
 
@@ -372,6 +431,4 @@ Write-Host "All set! Thank you for using Partition Pantheon." -ForeGroundColor C
 
 }
 
-###
 Partition_Pantheon
-
